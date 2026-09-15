@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — DevShop</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg:#0a0a0f; --bg2:#12121a; --card:#16161f; --border:#232334;
+    --text:#e8e8f0; --muted:#8a8aa0; --accent:#6366f1; --accent2:#8b5cf6;
+    --green:#10b981; --red:#ef4444;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+  body { background:var(--bg); color:var(--text); overflow-x:hidden; }
+  a { color:inherit; text-decoration:none; }
+
+  .layout { display:flex; min-height:100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:260px; background:var(--bg2); border-right:1px solid var(--border);
+    padding:24px 16px; position:fixed; top:0; left:0; bottom:0;
+    overflow-y:auto; transition:.3s; z-index:50;
+  }
+  .sidebar .logo {
+    font-size:20px; font-weight:800; padding:0 12px 24px;
+    display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .sidebar .logo span { width:26px; height:26px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:8px; }
+  .nav-item {
+    display:flex; align-items:center; gap:12px; padding:11px 14px;
+    border-radius:10px; color:var(--muted); font-size:14px; font-weight:500;
+    cursor:pointer; margin-bottom:4px; transition:.2s;
+  }
+  .nav-item:hover { background:var(--card); color:var(--text); }
+  .nav-item.active {
+    background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.15));
+    color:var(--text); border:1px solid rgba(99,102,241,0.3);
+  }
+  .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+
+  .main { flex:1; margin-left:260px; padding:0 32px 40px; min-width:0; }
+
+  .topbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 0; border-bottom:1px solid var(--border); margin-bottom:28px;
+    gap:16px; flex-wrap:wrap;
+  }
+  .topbar h1 { font-size:22px; font-weight:700; }
+  .topbar-right { display:flex; gap:12px; align-items:center; }
+  .btn-view {
+    padding:9px 16px; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; color:var(--text); font-size:13px; cursor:pointer;
+    font-weight:500; transition:.2s;
+  }
+  .btn-view:hover { border-color:var(--accent); }
+  .profile-chip {
+    display:flex; align-items:center; gap:10px; padding:6px 14px 6px 6px;
+    background:var(--card); border:1px solid var(--border); border-radius:100px; font-size:13px;
+  }
+  .avatar {
+    width:28px; height:28px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;
+  }
+  .mobile-menu-btn { display:none; font-size:22px; background:none; border:none;
+    color:var(--text); cursor:pointer; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:18px; margin-bottom:30px; }
+  .stat-card {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:22px; transition:.2s;
+  }
+  .stat-card:hover { transform:translateY(-2px); border-color:var(--accent); }
+  .stat-icon {
+    width:40px; height:40px; border-radius:10px;
+    background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; margin-bottom:14px; color:#a5b4fc;
+  }
+  .stat-card h3 { font-size:30px; font-weight:800; letter-spacing:-1px; }
+  .stat-card p { color:var(--muted); font-size:13px; margin-top:4px; }
+
+  /* SECTION */
+  .section {
+    background:var(--card); border:1px solid var(--border); border-radius:16px;
+    padding:24px; margin-bottom:24px;
+  }
+  .section-head {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:20px; gap:16px; flex-wrap:wrap;
+  }
+  .section-head h2 { font-size:18px; font-weight:700; }
+  .btn {
+    padding:10px 18px; background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600;
+    cursor:pointer; transition:.2s;
+  }
+  .btn:hover { transform:translateY(-1px); }
+  .btn-ghost { background:var(--card); color:var(--text); border:1px solid var(--border); }
+  .btn-danger { background:var(--red); }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; }
+  th, td { padding:14px; text-align:left; font-size:14px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  td .actions { display:flex; gap:8px; }
+  td button { background:none; border:none; color:var(--muted);
+    cursor:pointer; padding:8px 10px; border-radius:8px; font-size:15px;
+    transition:.2s;
+  }
+  td button:hover { color:var(--text); background:var(--border); }
+  td button.danger:hover { color:var(--red); background:rgba(239,68,68,0.1); }
+  .badge { display:inline-block; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:600; }
+  .badge.yes { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+  .badge.no { background:rgba(138,138,160,0.15); color:var(--muted); }
+  .badge.price { background:rgba(16,185,129,0.15); color:#6ee7b7; }
+
+  /* FORM */
+  .form-grid { display:grid; gap:18px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  label { display:block; font-size:13px; font-weight:600; margin-bottom:8px; color:#b8b8cc; }
+  input, textarea, select {
+    width:100%; padding:12px 14px; background:#0d0d15; border:1px solid var(--border);
+    border-radius:10px; color:var(--text); font-size:14px; outline:none; transition:.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,102,241,0.15);
+  }
+  textarea { min-height:220px; resize:vertical; line-height:1.7; }
+  .form-actions { display:flex; gap:12px; margin-top:24px; flex-wrap:wrap; }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:30px; right:30px; padding:14px 22px;
+    border-radius:12px; color:#fff; font-size:14px; font-weight:500;
+    z-index:9999; animation:slideIn .3s; }
+  .toast.ok { background:var(--green); } .toast.err { background:var(--red); }
+  @keyframes slideIn { from{transform:translateX(400px);} to{transform:translateX(0);} }
+
+  .empty { text-align:center; padding:60px 20px; color:var(--muted); }
+  .empty h3 { color:var(--text); margin-bottom:8px; }
+  .loading { text-align:center; padding:60px; color:var(--muted); }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    backdrop-filter:blur(6px); z-index:1000; display:none;
+    align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:var(--bg2); border:1px solid var(--border); border-radius:16px;
+    padding:32px; max-width:420px; width:100%; }
+  .modal h3 { margin-bottom:12px; }
+  .modal p { color:var(--muted); margin-bottom:22px; font-size:14px; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; }
+
+  @media (max-width:1024px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:768px) {
+    .sidebar { transform:translateX(-100%); }
+    .sidebar.open { transform:translateX(0); }
+    .main { margin-left:0; padding:0 16px 32px; }
+    .mobile-menu-btn { display:block; }
+    .topbar h1 { font-size:18px; }
+    .stats-grid { grid-template-columns:1fr 1fr; gap:12px; }
+    .form-row { grid-template-columns:1fr; }
+    table, thead, tbody, tr, td, th { display:block; }
+    thead { display:none; }
+    tr { background:var(--bg); border:1px solid var(--border);
+      border-radius:12px; margin-bottom:12px; padding:14px; }
+    td { border:none; padding:6px 0; }
+    td::before { content:attr(data-label); font-weight:600; color:var(--muted);
+      display:inline-block; min-width:100px; font-size:12px; text-transform:uppercase; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo"><span></span>DevShop</div>
+    <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+      <span class="icon"><i class="fa-solid fa-chart-line"></i></span> Dashboard
+    </div>
+    <div class="nav-item" data-view="posts" onclick="navigate('posts')">
+      <span class="icon"><i class="fa-solid fa-box"></i></span> Products
+    </div>
+    <div class="nav-item" data-view="create" onclick="navigate('create')">
+      <span class="icon"><i class="fa-solid fa-plus"></i></span> Add Product
+    </div>
+    <div class="nav-item" data-view="comments" onclick="navigate('comments')">
+      <span class="icon"><i class="fa-solid fa-comment"></i></span> Comments
+    </div>
+    <div class="nav-item" onclick="doLogout()" style="margin-top:24px;">
+      <span class="icon"><i class="fa-solid fa-right-from-bracket"></i></span> Logout
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div style="display:flex; align-items:center; gap:14px;">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+        <h1 id="pageTitle">Dashboard</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn-view" onclick="viewSite()"><i class="fa-solid fa-globe"></i> View Website</button>
+        <div class="profile-chip">
+          <div class="avatar">A</div>
+          <span>Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="viewContainer">
+      <div class="loading">Loading dashboard...</div>
+    </div>
+  </main>
+</div>
+
+<!-- CONFIRM MODAL (fallback) -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmText">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = window.location.protocol === 'file:' ? 'http://localhost:5000' : window.location.origin;
+const API = BASE + '/api';
+
+/* ===== TOKEN ===== */
+let token = localStorage.getItem('adminToken');
+if (!token) {
+  // Auto-set for dev
+  localStorage.setItem('adminToken', 'devblog-secret-token-2024');
+  token = 'devblog-secret-token-2024';
+}
+
+const headers = {
+  'Content-Type': 'application/json',
+  'x-admin-token': token
+};
+
+let allProducts = [];
+let allComments = [];
+let editingId = null;
+
+/* ===== UTILS ===== */
+function toast(msg, type) {
+  type = type || 'ok';
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function() { t.remove(); }, 2500);
+}
+
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, function(m) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function formatPrice(n) {
+  if (!n || n <= 0) return '—';
+  return '₹' + Number(n).toLocaleString('en-IN');
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+function doLogout() {
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminEmail');
+  window.location.href = BASE + '/admin-login.html';
+}
+
+function viewSite() { window.open(BASE + '/', '_blank'); }
+
+/* ===== NAVIGATION ===== */
+function navigate(view) {
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var item = document.querySelector('[data-view="' + view + '"]');
+  if (item) item.classList.add('active');
+  document.getElementById('sidebar').classList.remove('open');
+
+  var titles = {
+    dashboard: 'Dashboard', posts: 'All Products', create: 'Add Product',
+    edit: 'Edit Product', comments: 'Comments'
+  };
+  document.getElementById('pageTitle').textContent = titles[view] || 'Dashboard';
+
+  if (view === 'dashboard') renderDashboard();
+  else if (view === 'posts') renderPosts();
+  else if (view === 'create') renderCreatePost();
+  else if (view === 'edit') renderEditPost(editingId);
+  else if (view === 'comments') renderComments();
+}
+
+/* ===== LOAD DATA ===== */
+async function loadData() {
+  try {
+    var res1 = await fetch(API + '/posts');
+    allProducts = await res1.json();
+
+    var res2 = await fetch(API + '/admin/comments', { headers: headers });
+    allComments = await res2.json();
+  } catch (e) {
+    toast('Failed to load data', 'err');
+    console.error(e);
+  }
+}
+
+/* ===== DASHBOARD ===== */
+function renderDashboard() {
+  var box = document.getElementById('viewContainer');
+  var totalLikes = allProducts.reduce(function(s,p) { return s + (p.likes||0); }, 0);
+  var totalComments = allProducts.reduce(function(s,p) { return s + (p.comments?.length||0); }, 0);
+  var totalClicks = allProducts.reduce(function(s,p) { return s + (p.clicks||0); }, 0);
+
+  box.innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-box"></i></div>
+        <h3>${allProducts.length}</h3>
+        <p>Total Products</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-heart"></i></div>
+        <h3>${totalLikes}</h3>
+        <p>Total Likes</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-comment"></i></div>
+        <h3>${totalComments}</h3>
+        <p>Total Comments</p>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+        <h3>${totalClicks}</h3>
+        <p>Buy Clicks</p>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-head">
+        <h2>Recent Products</h2>
+        <button class="btn" onclick="navigate('create')"><i class="fa-solid fa-plus"></i> Add Product</button>
+      </div>
+      ${allProducts.length ? `
+        <table>
+          <thead><tr>
+            <th>Title</th><th>Category</th><th>Price</th>
+            <th>Likes</th><th>Clicks</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${allProducts.slice(0,8).map(function(p) { return `
+              <tr>
+                <td data-label="Title">${esc(p.title)}</td>
+                <td data-label="Category"><span class="badge yes">${esc(p.category || 'General')}</span></td>
+                <td data-label="Price"><span class="badge price">${formatPrice(p.price)}</span></td>
+                <td data-label="Likes">${p.likes || 0}</td>
+                <td data-label="Clicks">${p.clicks || 0}</td>
+                <td data-label="Actions">
+                  <div class="actions">
+                    <button onclick="editPost('${p._id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    <button class="danger" onclick="deletePost('${p._id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `; }).join('')}
+          </tbody>
+        </table>
+      ` : '<div class="empty"><h3>No products yet</h3><p>Add your first product!</p></div>'}
+    </div>
+  `;
+}
+
+/* ===== POSTS LIST ===== */
+function renderPosts() {
+  var box = document.getElementById('viewContainer');
+  box.innerHTML = `
+    <div class="section">
+      <div class="section-head">
+        <h2>All Products (${allProducts.length})</h2>
+        <button class="btn" onclick="navigate('create')"><i class="fa-solid fa-plus"></i> Add Product</button>
+      </div>
+      ${allProducts.length ? `
+        <table>
+          <thead><tr>
+            <th>Title</th><th>Category</th><th>Price</th>
+            <th>Link</th><th>Likes</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${allProducts.map(function(p) { return `
+              <tr>
+                <td data-label="Title">${esc(p.title)}</td>
+                <td data-label="Category"><span class="badge yes">${esc(p.category || 'General')}</span></td>
+                <td data-label="Price"><span class="badge price">${formatPrice(p.price)}</span></td>
+                <td data-label="Link"><span class="badge ${p.affiliateLink ? 'yes' : 'no'}">${p.affiliateLink ? 'Yes' : 'No'}</span></td>
+                <td data-label="Likes">${p.likes || 0}</td>
+                <td data-label="Actions">
+                  <div class="actions">
+                    <button onclick="editPost('${p._id}')" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                    <button class="danger" onclick="deletePost('${p._id}')" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `; }).join('')}
+          </tbody>
+        </table>
+      ` : '<div class="empty"><h3>No products yet</h3></div>'}
+    </div>
+  `;
+}
+
+/* ===== CREATE POST ===== */
+function renderCreatePost() {
+  document.getElementById('viewContainer').innerHTML = `
+    <div class="section">
+      <div class="section-head"><h2>Add New Product</h2></div>
+      <div class="form-grid">
+        <div class="form-row">
+          <div><label>Product Name *</label>
+            <input type="text" id="fTitle" placeholder="e.g. ASUS Vivobook 14"></div>
+          <div><label>Brand / Seller</label>
+            <input type="text" id="fAuthor" value="Admin"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Category</label>
+            <input type="text" id="fCategory" value="General"></div>
+          <div><label>Featured Image URL</label>
+            <input type="text" id="fImage" placeholder="https://..."></div>
+        </div>
+        <div class="form-row">
+          <div><label>Price (₹)</label>
+            <input type="number" id="fPrice" placeholder="45999"></div>
+          <div><label>Original Price (₹) — optional</label>
+            <input type="number" id="fOriginalPrice" placeholder="55999"></div>
+        </div>
+        <div><label>🛒 Affiliate / Buy Link *</label>
+          <input type="text" id="fAffiliate" placeholder="https://amazon.in/..."></div>
+        <div><label>Product Description *</label>
+          <textarea id="fBody" placeholder="Describe the product..."></textarea></div>
+        <div class="form-actions">
+          <button class="btn" onclick="submitPost(false)"><i class="fa-solid fa-rocket"></i> Publish Product</button>
+          <button class="btn btn-ghost" onclick="navigate('dashboard')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function editPost(id) {
+  editingId = id;
+  navigate('edit');
+}
+
+function renderEditPost(id) {
+  var p = allProducts.find(function(x) { return x._id === id; });
+  if (!p) { toast('Product not found', 'err'); navigate('posts'); return; }
+  document.getElementById('viewContainer').innerHTML = `
+    <div class="section">
+      <div class="section-head"><h2>Edit Product</h2></div>
+      <div class="form-grid">
+        <div class="form-row">
+          <div><label>Product Name *</label>
+            <input type="text" id="fTitle" value="${esc(p.title)}"></div>
+          <div><label>Brand / Seller</label>
+            <input type="text" id="fAuthor" value="${esc(p.authorName)}"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Category</label>
+            <input type="text" id="fCategory" value="${esc(p.category || 'General')}"></div>
+          <div><label>Featured Image URL</label>
+            <input type="text" id="fImage" value="${esc(p.featuredImage || '')}"></div>
+        </div>
+        <div class="form-row">
+          <div><label>Price (₹)</label>
+            <input type="number" id="fPrice" value="${p.price || ''}"></div>
+          <div><label>Original Price (₹)</label>
+            <input type="number" id="fOriginalPrice" value="${p.originalPrice || ''}"></div>
+        </div>
+        <div><label>🛒 Affiliate / Buy Link *</label>
+          <input type="text" id="fAffiliate" value="${esc(p.affiliateLink || '')}"></div>
+        <div><label>Description *</label>
+          <textarea id="fBody">${esc(p.body)}</textarea></div>
+        <div class="form-actions">
+          <button class="btn" onclick="submitPost(true)"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+          <button class="btn btn-ghost" onclick="navigate('posts')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function submitPost(isEdit) {
+  var title = document.getElementById('fTitle').value.trim();
+  var body = document.getElementById('fBody').value.trim();
+  var authorName = document.getElementById('fAuthor').value.trim() || 'Admin';
+  var category = document.getElementById('fCategory').value.trim() || 'General';
+  var featuredImage = document.getElementById('fImage').value.trim();
+  var price = parseFloat(document.getElementById('fPrice').value) || 0;
+  var originalPrice = parseFloat(document.getElementById('fOriginalPrice').value) || 0;
+  var affiliateLink = document.getElementById('fAffiliate').value.trim();
+
+  if (!title || !body) return toast('Name and description required', 'err');
+  if (!affiliateLink) return toast('Affiliate/Buy link required', 'err');
+
+  var payload = { title, body, authorName, category, featuredImage, price, originalPrice, affiliateLink };
+
+  try {
+    var url = isEdit ? API + '/posts/' + editingId : API + '/posts';
+    var method = isEdit ? 'PUT' : 'POST';
+    var res = await fetch(url, { method: method, headers: headers, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error();
+    toast(isEdit ? 'Product updated!' : 'Product published!');
+    await loadData();
+    navigate('posts');
+  } catch (e) {
+    toast('Failed to save', 'err');
+  }
+}
+
+/* ===== DELETE POST — FIXED ===== */
+function deletePost(id) {
+  console.log('🗑️ Delete clicked. ID:', id);
+
+  var product = allProducts.find(function(p) { return p._id === id; });
+  var title = product ? product.title : 'this product';
+
+  // Native browser confirm
+  if (!confirm('Delete "' + title + '"?\n\nThis cannot be undone.')) {
+    console.log('Cancelled by user');
+    return;
+  }
+
+  console.log('Confirmed. Sending DELETE request...');
+
+  var currentToken = localStorage.getItem('adminToken') || 'devblog-secret-token-2024';
+  console.log('Token:', currentToken);
+
+  fetch(API + '/posts/' + id, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-admin-token': currentToken
+    }
+  })
+  .then(function(res) {
+    console.log('Status:', res.status);
+    return res.json();
+  })
+  .then(function(data) {
+    console.log('Response:', data);
+    if (data.message === 'Product deleted' || data.message) {
+      toast('Product deleted!');
+      // Immediate UI remove
+      allProducts = allProducts.filter(function(p) { return p._id !== id; });
+      setTimeout(function() {
+        location.reload();
+      }, 800);
+    } else {
+      toast('Delete failed: ' + (data.error || 'Unknown'), 'err');
+    }
+  })
+  .catch(function(err) {
+    console.error('Error:', err);
+    toast('Network error: ' + err.message, 'err');
+  });
+}
+
+/* ===== COMMENTS ===== */
+function renderComments() {
+  var box = document.getElementById('viewContainer');
+  box.innerHTML = `
+    <div class="section">
+      <div class="section-head"><h2>All Comments (${allComments.length})</h2></div>
+      ${allComments.length ? `
+        <table>
+          <thead><tr>
+            <th>Author</th><th>Comment</th><th>Product</th><th>Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody>
+            ${allComments.map(function(c) { return `
+              <tr>
+                <td data-label="Author">${esc(c.author)}</td>
+                <td data-label="Comment">${esc(c.text)}</td>
+                <td data-label="Product">${esc(c.postTitle)}</td>
+                <td data-label="Date">${formatDate(c.createdAt)}</td>
+                <td data-label="Actions">
+                  <button class="danger" onclick="deleteComment('${c.postId}', '${c._id}')"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+            `; }).join('')}
+          </tbody>
+        </table>
+      ` : '<div class="empty"><h3>No comments yet</h3></div>'}
+    </div>
+  `;
+}
+
+function deleteComment(postId, commentId) {
+  if (!confirm('Delete this comment?')) return;
+
+  fetch(API + '/posts/' + postId + '/comments/' + commentId, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-admin-token': localStorage.getItem('adminToken') || 'devblog-secret-token-2024'
+    }
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    toast('Comment deleted');
+    loadData().then(function() { renderComments(); });
+  })
+  .catch(function(err) {
+    toast('Failed to delete', 'err');
+    console.error(err);
+  });
+}
+
+/* ===== INIT ===== */
+(async function init() {
+  await loadData();
+  navigate('dashboard');
+})();
+</script>
+</body>
+</html>
